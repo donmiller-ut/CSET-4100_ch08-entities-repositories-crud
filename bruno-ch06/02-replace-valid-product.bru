@@ -1,0 +1,33 @@
+meta {
+  name: Replace valid product
+  type: http
+  seq: 2
+}
+
+put {
+  url: {{baseUrl}}/api/products/{{createdProductId}}
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Insulated Bottle, Revised",
+    "description": null,
+    "price": 26.50,
+    "active": false
+  }
+}
+
+tests {
+  test("replaces through the complete replacement DTO", function () {
+    expect(res.status).to.equal(200);
+    expect(res.body.name).to.equal("Insulated Bottle, Revised");
+    expect(res.body.active).to.equal(false);
+  });
+}

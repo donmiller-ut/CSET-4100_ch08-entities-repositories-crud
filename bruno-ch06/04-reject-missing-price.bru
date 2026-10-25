@@ -1,0 +1,29 @@
+meta {
+  name: Reject missing price
+  type: http
+  seq: 4
+}
+
+post {
+  url: {{baseUrl}}/api/products
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json, application/problem+json
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "No Price"
+  }
+}
+
+tests {
+  test("reports the required price field", function () {
+    expect(res.status).to.equal(422);
+    expect(res.body.errors[0].field).to.equal("price");
+  });
+}

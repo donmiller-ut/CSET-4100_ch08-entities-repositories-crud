@@ -1,0 +1,36 @@
+meta {
+  name: Create valid product
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{baseUrl}}/api/products
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Insulated Bottle",
+    "description": "One-liter bottle",
+    "price": 24.95
+  }
+}
+
+script:post-response {
+  bru.setVar("createdProductId", res.body.id);
+}
+
+tests {
+  test("creates through the validated request DTO", function () {
+    expect(res.status).to.equal(201);
+    expect(res.body.active).to.equal(true);
+    expect(res.headers["x-request-id"]).to.match(/^req-[0-9a-f]{32}$/);
+  });
+}

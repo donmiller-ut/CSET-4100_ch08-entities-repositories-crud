@@ -1,0 +1,24 @@
+meta {
+  name: Confirm deleted product is missing
+  type: http
+  seq: 7
+}
+
+get {
+  url: {{baseUrl}}/api/products/{{createdProductId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json, application/problem+json
+}
+
+tests {
+  test("returns the contract-shaped missing-product response", function () {
+    expect(res.status).to.equal(404);
+    expect(res.headers).to.have.property("x-request-id");
+    expect(res.body.code).to.equal("product_not_found");
+    expect(res.body.requestId).to.match(/^req-[0-9a-f]{32}$/);
+  });
+}

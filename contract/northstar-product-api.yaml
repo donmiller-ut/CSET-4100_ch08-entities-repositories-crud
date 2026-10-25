@@ -1,0 +1,567 @@
+# tag::contract-root[]
+openapi: 3.1.1
+jsonSchemaDialect: https://spec.openapis.org/oas/3.1/dialect/base
+info:
+  title: Northstar Market Product API
+  version: 1.0.0-ch06
+  license:
+    name: All rights reserved
+    identifier: LicenseRef-All-Rights-Reserved
+  description: >-
+    Chapter 6 Product contract with Problem Details. Read operations are
+    public. Mutation operations document the bearer-token access expectation that
+    later chapters will implement. The local Chapter 6 milestone implements the Product operations but not
+    authentication or authorization.
+servers:
+  - url: https://api.northstar.example
+    description: Illustrative production authority
+tags:
+  - name: Products
+    description: Catalog Product resources
+# end::contract-root[]
+paths:
+  /api/products:
+    get:
+      tags: [Products]
+      operationId: listProducts
+      summary: List products
+      description: >-
+        Returns one bounded page of Product representations. Page numbering starts
+        at zero. The active filter is optional and may be combined with pagination.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/Active'
+      responses:
+        '200':
+          description: A bounded page of Product representations
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPage'
+              examples:
+                firstPage:
+                  $ref: '#/components/examples/ProductPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    post:
+      tags: [Products]
+      operationId: createProduct
+      summary: Create a product
+      description: Creates a Product from the supplied representation.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductCreate'
+            examples:
+              trailBackpack:
+                $ref: '#/components/examples/ProductCreate'
+      responses:
+        '201':
+          description: Product created
+          headers:
+            Location:
+              description: URI of the created Product resource
+              required: true
+              schema:
+                type: string
+                format: uri-reference
+              example: /api/products/42
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+              examples:
+                createdProduct:
+                  $ref: '#/components/examples/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/products/{productId}:
+    parameters:
+      - $ref: '#/components/parameters/ProductId'
+    get:
+      tags: [Products]
+      operationId: getProduct
+      summary: Retrieve a product
+      security: []
+      responses:
+        '200':
+          description: Product found
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+              examples:
+                trailBackpack:
+                  $ref: '#/components/examples/Product'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    put:
+      tags: [Products]
+      operationId: replaceProduct
+      summary: Replace a product
+      description: >-
+        Replaces the complete mutable Product representation at the target URI.
+        Every mutable field is required so omission cannot silently mean partial
+        update.
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductReplace'
+            examples:
+              revisedTrailBackpack:
+                $ref: '#/components/examples/ProductReplace'
+      responses:
+        '200':
+          description: Product replaced
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+              examples:
+                replacedProduct:
+                  $ref: '#/components/examples/ReplacedProduct'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '406':
+          $ref: '#/components/responses/NotAcceptable'
+        '415':
+          $ref: '#/components/responses/UnsupportedMediaType'
+        '422':
+          $ref: '#/components/responses/UnprocessableContent'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    delete:
+      tags: [Products]
+      operationId: deleteProduct
+      summary: Delete a product
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Product deleted; the response has no content
+          headers:
+            X-Request-ID:
+              $ref: '#/components/headers/RequestId'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        Planned access expectation for catalog mutations. Authentication and
+        authorization are implemented in Chapters 12 and 13, not by this contract.
+  parameters:
+    ProductId:
+      name: productId
+      in: path
+      required: true
+      description: Positive Product identifier
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+      example: 42
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Zero-based page number
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+      example: 0
+    Size:
+      name: size
+      in: query
+      required: false
+      description: Number of Product representations requested per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      example: 20
+    Active:
+      name: active
+      in: query
+      required: false
+      description: When present, include only products with this active state
+      schema:
+        type: boolean
+      example: true
+  headers:
+    RequestId:
+      description: Safe correlation identifier generated or accepted by policy
+      schema:
+        type: string
+        pattern: '^req-[A-Za-z0-9]{8,32}$'
+      example: req-7f3a2c19
+  schemas:
+    # tag::product-schema[]
+    Product:
+      type: object
+      additionalProperties: false
+      required: [id, name, description, price, active]
+      properties:
+        id:
+          type: integer
+          format: int64
+          minimum: 1
+          readOnly: true
+          description: Stable Product identifier
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: [string, 'null']
+          maxLength: 1000
+        price:
+          type: number
+          minimum: 0.01
+          multipleOf: 0.01
+        active:
+          type: boolean
+    # end::product-schema[]
+    ProductCreate:
+      type: object
+      additionalProperties: false
+      required: [name, price]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: [string, 'null']
+          maxLength: 1000
+          default: null
+        price:
+          type: number
+          minimum: 0.01
+          multipleOf: 0.01
+        active:
+          type: boolean
+          default: true
+    ProductReplace:
+      type: object
+      additionalProperties: false
+      required: [name, description, price, active]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: [string, 'null']
+          maxLength: 1000
+        price:
+          type: number
+          minimum: 0.01
+          multipleOf: 0.01
+        active:
+          type: boolean
+    ProductPage:
+      type: object
+      additionalProperties: false
+      required: [items, page, size, totalElements, totalPages, links]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        page:
+          type: integer
+          minimum: 0
+        size:
+          type: integer
+          minimum: 1
+          maximum: 100
+        totalElements:
+          type: integer
+          minimum: 0
+        totalPages:
+          type: integer
+          minimum: 0
+        links:
+          $ref: '#/components/schemas/PageLinks'
+    PageLinks:
+      type: object
+      additionalProperties: false
+      required: [self, first, previous, next, last]
+      properties:
+        self:
+          type: string
+          format: uri-reference
+        first:
+          type: string
+          format: uri-reference
+        previous:
+          type: [string, 'null']
+          format: uri-reference
+        next:
+          type: [string, 'null']
+          format: uri-reference
+        last:
+          type: string
+          format: uri-reference
+    ProblemDetails:
+      type: object
+      additionalProperties: false
+      description: Stable RFC 9457 problem details with Northstar correlation and validation extensions
+      required: [type, title, status, detail, instance, code, requestId]
+      properties:
+        type:
+          type: string
+          format: uri
+          description: Stable identifier for the problem type
+        title:
+          type: string
+          minLength: 1
+          description: Short summary shared by occurrences of this problem type
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+          minLength: 1
+          description: Safe explanation for this occurrence
+        instance:
+          type: string
+          format: uri-reference
+          description: Request path associated with this occurrence
+        code:
+          type: string
+          pattern: '^[a-z][a-z0-9_]*$'
+        requestId:
+          type: string
+          pattern: '^req-[A-Za-z0-9]{8,32}$'
+        errors:
+          type: array
+          items:
+            $ref: '#/components/schemas/ErrorDetail'
+    ErrorDetail:
+      type: object
+      additionalProperties: false
+      required: [field, issue]
+      properties:
+        field:
+          type: string
+          minLength: 1
+        issue:
+          type: string
+          minLength: 1
+  responses:
+    BadRequest:
+      description: Request syntax, parameters, or framing are invalid
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Unauthorized:
+      description: Authentication credentials are missing or invalid
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    Forbidden:
+      description: The authenticated principal is not allowed to perform the operation
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    NotFound:
+      description: No Product resource matches the target identifier
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            missingProduct:
+              $ref: '#/components/examples/NotFoundError'
+    NotAcceptable:
+      description: No available representation satisfies the Accept field
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    UnsupportedMediaType:
+      description: Request content does not use application/json
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+    UnprocessableContent:
+      description: JSON syntax is valid, but one or more Product values are unacceptable
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            invalidProduct:
+              $ref: '#/components/examples/ValidationError'
+    InternalError:
+      description: An unexpected server condition prevented completion
+      headers:
+        X-Request-ID:
+          $ref: '#/components/headers/RequestId'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+  examples:
+    Product:
+      summary: A Product representation
+      value:
+        id: 42
+        name: Trail Backpack
+        description: A lightweight day pack
+        price: 79.95
+        active: true
+    ReplacedProduct:
+      summary: Product after complete replacement
+      value:
+        id: 42
+        name: Trail Backpack 28L
+        description: A revised lightweight day pack
+        price: 89.95
+        active: true
+    ProductCreate:
+      summary: Values supplied to create a Product
+      value:
+        name: Trail Backpack
+        description: A lightweight day pack
+        price: 79.95
+        active: true
+    ProductReplace:
+      summary: Complete mutable Product replacement
+      value:
+        name: Trail Backpack 28L
+        description: A revised lightweight day pack
+        price: 89.95
+        active: true
+    ProductPage:
+      summary: First bounded page of active Products
+      value:
+        items:
+          - id: 42
+            name: Trail Backpack
+            description: A lightweight day pack
+            price: 79.95
+            active: true
+        page: 0
+        size: 20
+        totalElements: 1
+        totalPages: 1
+        links:
+          self: /api/products?page=0&size=20&active=true
+          first: /api/products?page=0&size=20&active=true
+          previous: null
+          next: null
+          last: /api/products?page=0&size=20&active=true
+    NotFoundError:
+      summary: Missing Product failure
+      value:
+        type: https://api.northstar.example/problems/product-not-found
+        title: Product not found
+        status: 404
+        detail: Product 999 was not found
+        instance: /api/products/999
+        code: product_not_found
+        requestId: req-7f3a2c19
+    ValidationError:
+      summary: Unacceptable Product failure
+      value:
+        type: https://api.northstar.example/problems/validation-failed
+        title: Request validation failed
+        status: 422
+        detail: One or more request fields are invalid.
+        instance: /api/products
+        code: validation_failed
+        requestId: req-8d4b1a27
+        errors:
+          - field: price
+            issue: must be greater than or equal to 0.01

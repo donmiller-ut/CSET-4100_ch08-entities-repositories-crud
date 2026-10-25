@@ -1,0 +1,31 @@
+meta {
+  name: Reject incomplete replacement
+  type: http
+  seq: 5
+}
+
+put {
+  url: {{baseUrl}}/api/products/42
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json, application/problem+json
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Incomplete Replacement",
+    "description": null,
+    "price": 7.00
+  }
+}
+
+tests {
+  test("requires active for complete replacement", function () {
+    expect(res.status).to.equal(422);
+    expect(res.body.errors[0].field).to.equal("active");
+  });
+}

@@ -1,0 +1,18 @@
+meta {
+  name: Delete created product
+  type: http
+  seq: 6
+}
+
+delete {
+  url: {{baseUrl}}/api/products/{{createdProductId}}
+  body: none
+  auth: none
+}
+
+tests {
+  test("deletes without returning a representation", function () {
+    expect(res.status).to.equal(204);
+    expect(res.body).to.equal("");
+  });
+}

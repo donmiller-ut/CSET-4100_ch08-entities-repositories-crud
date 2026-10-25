@@ -1,0 +1,23 @@
+meta {
+  name: Report missing product
+  type: http
+  seq: 10
+}
+
+get {
+  url: {{baseUrl}}/api/products/999
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json, application/problem+json
+}
+
+tests {
+  test("returns a correlated 404 problem", function () {
+    expect(res.status).to.equal(404);
+    expect(res.body.code).to.equal("product_not_found");
+    expect(res.body.requestId).to.equal(res.headers["x-request-id"]);
+  });
+}

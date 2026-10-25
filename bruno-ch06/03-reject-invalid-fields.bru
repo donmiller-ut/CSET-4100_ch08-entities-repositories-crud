@@ -1,0 +1,33 @@
+meta {
+  name: Reject invalid fields
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/products
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json, application/problem+json
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "   ",
+    "description": "Invalid values remain outside the application model",
+    "price": 0.001
+  }
+}
+
+tests {
+  test("returns field errors in a 422 problem", function () {
+    expect(res.status).to.equal(422);
+    expect(res.body.code).to.equal("validation_failed");
+    expect(res.body.errors.length).to.equal(3);
+    expect(JSON.stringify(res.body)).to.not.include("stackTrace");
+  });
+}

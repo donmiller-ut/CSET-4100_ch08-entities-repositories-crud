@@ -1,0 +1,27 @@
+meta {
+  name: Reject unsupported media type
+  type: http
+  seq: 11
+}
+
+post {
+  url: {{baseUrl}}/api/products
+  body: text
+  auth: none
+}
+
+headers {
+  Accept: application/json, application/problem+json
+  Content-Type: text/plain
+}
+
+body:text {
+  not-json
+}
+
+tests {
+  test("returns a 415 problem", function () {
+    expect(res.status).to.equal(415);
+    expect(res.body.code).to.equal("unsupported_media_type");
+  });
+}

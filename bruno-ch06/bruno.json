@@ -1,0 +1,6 @@
+{
+  "version": "1",
+  "name": "Chapter 6 Northstar Validation and Errors",
+  "type": "collection",
+  "ignore": ["node_modules", ".git"]
+}

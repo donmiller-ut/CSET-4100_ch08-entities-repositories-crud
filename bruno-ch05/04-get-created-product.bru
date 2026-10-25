@@ -1,0 +1,23 @@
+meta {
+  name: Get created product
+  type: http
+  seq: 4
+}
+
+get {
+  url: {{baseUrl}}/api/products/{{createdProductId}}
+  body: none
+  auth: none
+}
+
+headers {
+  Accept: application/json
+}
+
+tests {
+  test("retrieves the product created earlier in the run", function () {
+    expect(res.status).to.equal(200);
+    expect(res.body.id).to.equal(Number(bru.getVar("createdProductId")));
+    expect(res.body.name).to.equal("Insulated Bottle");
+  });
+}

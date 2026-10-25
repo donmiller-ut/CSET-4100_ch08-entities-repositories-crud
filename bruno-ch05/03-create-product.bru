@@ -1,0 +1,36 @@
+meta {
+  name: Create product
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{baseUrl}}/api/products
+  body: json
+  auth: none
+}
+
+headers {
+  Accept: application/json
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "name": "Insulated Bottle",
+    "description": "One-liter bottle",
+    "price": 24.95
+  }
+}
+
+script:post-response {
+  bru.setVar("createdProductId", res.body.id);
+}
+
+tests {
+  test("creates a product and identifies its resource", function () {
+    expect(res.status).to.equal(201);
+    expect(res.headers.location).to.equal("/api/products/" + res.body.id);
+    expect(res.body.active).to.equal(true);
+  });
+}
